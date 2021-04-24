@@ -12,7 +12,7 @@ javac -h . Main.java
 sudo java -Djava.library.path=cmake-build-debug Main %launch_mode% %args%
 ```
 
-##Launch Modes
+## Launch Modes
 * list
 * shell %path_to_fs%
 
