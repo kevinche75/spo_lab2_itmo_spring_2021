@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.19)
+project(spo_lab2 C)
+
+set(CMAKE_C_STANDARD 99)
+find_package(JNI REQUIRED)
+include_directories(${JNI_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR})
+add_executable(spo_lab2 available_devices.c main.c ntfs.h ntfs.c ntfsutils.c ntfsutils.h Main.c)
+add_library(ntfsutils SHARED Main.c ntfsutils.c ntfs.c available_devices.c)
+target_link_libraries(spo_lab2 PRIVATE ntfsutils)
