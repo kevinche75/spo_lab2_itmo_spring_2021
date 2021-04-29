@@ -18,50 +18,50 @@ JNIEXPORT void JNICALL Java_Main_print_1devices
 /*
  * Class:     Main
  * Method:    ls
- * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ * Signature: (Ljava/lang/String;J)[Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_Main_ls
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT jobjectArray JNICALL Java_Main_ls
+  (JNIEnv *, jobject, jstring, jlong);
 
 /*
  * Class:     Main
  * Method:    cd
- * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ * Signature: (Ljava/lang/String;J)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_Main_cd
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jlong);
 
 /*
  * Class:     Main
  * Method:    pwd
- * Signature: ()Ljava/lang/String;
+ * Signature: (J)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_Main_pwd
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     Main
  * Method:    cp
- * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+ * Signature: (Ljava/lang/String;Ljava/lang/String;J)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_Main_cp
-  (JNIEnv *, jobject, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jstring, jlong);
 
 /*
  * Class:     Main
  * Method:    initFS
- * Signature: (Ljava/lang/String;)I
+ * Signature: (Ljava/lang/String;)J
  */
-JNIEXPORT jint JNICALL Java_Main_initFS
+JNIEXPORT jlong JNICALL Java_Main_initFS
   (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     Main
  * Method:    closeFS
- * Signature: ()V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_Main_closeFS
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus
 }

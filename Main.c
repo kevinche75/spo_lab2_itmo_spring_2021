@@ -3,7 +3,6 @@
 //
 #include "Main.h"
 #include "ntfsutils.h"
-void *fs;
 
 /*
  * Class:     Main
@@ -19,13 +18,13 @@ JNIEXPORT void JNICALL Java_Main_print_1devices(JNIEnv * env, jobject obj){
  * Method:    initFS
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_Main_initFS(JNIEnv *env, jobject obj, jstring jpath){
+JNIEXPORT jlong JNICALL Java_Main_initFS(JNIEnv *env, jobject obj, jstring jpath){
     const char *path= (*env)->GetStringUTFChars(env, jpath, 0);
-    fs = init_fs((char *)path);
+    void *fs = init_fs((char *)path);
     if (fs != NULL)
-        return (jint)0;
+        return (jlong)fs;
     else
-        return (jint)-1;
+        return (jlong)-1;
 }
 
 /*
@@ -33,19 +32,54 @@ JNIEXPORT jint JNICALL Java_Main_initFS(JNIEnv *env, jobject obj, jstring jpath)
  * Method:    closeFS
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_Main_closeFS(JNIEnv *env, jobject obj){
-    close_fs(fs);
+JNIEXPORT void JNICALL Java_Main_closeFS(JNIEnv *env, jobject obj, jlong fs){
+    close_fs((void *)fs);
 };
+
+int count_infos(struct ntfs_ls_info *start){
+    int count = 0;
+    struct ntfs_ls_info *tmp = start;
+    while (tmp != NULL){
+        count++;
+        tmp = tmp->next;
+    }
+    return count;
+}
 
 /*
  * Class:     Main
  * Method:    ls
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_Main_ls(JNIEnv *env, jobject obj, jstring jpath){
+JNIEXPORT jobjectArray JNICALL Java_Main_ls(JNIEnv *env, jobject obj, jstring jpath, jlong fs){
     const char *path = (*env)->GetStringUTFChars(env, jpath, 0);
-    char *output = ls(fs, (char*)path);
-    return (*env)->NewStringUTF(env, output);
+    struct ntfs_ls_info *start = ls((void *)fs, (char*)path);
+    int count = count_infos(start);
+    jobjectArray infos = 0;
+    count--;
+    count*=2;
+    infos = (*env)->NewObjectArray(env,count,(*env)->FindClass(env,"java/lang/String"), (*env)->NewStringUTF(env, ""));
+    struct ntfs_ls_info *cur = start;
+    int i = 0;
+    while (cur != NULL){
+        jstring dir;
+        jstring name;
+        if (cur->filename != NULL){
+            if (cur->dir == 1){
+                dir = (*env)->NewStringUTF(env, "DIR");
+            } else {
+                dir = (*env)->NewStringUTF(env, "FILE");
+            }
+            (*env)->SetObjectArrayElement(env, infos, i, dir);
+            i++;
+            name = (*env)->NewStringUTF(env, cur->filename);
+            (*env)->SetObjectArrayElement(env, infos, i, name);
+            i++;
+        }
+        cur = cur->next;
+    }
+    free_infos(start);
+    return infos;
 }
 
 /*
@@ -53,9 +87,9 @@ JNIEXPORT jstring JNICALL Java_Main_ls(JNIEnv *env, jobject obj, jstring jpath){
  * Method:    cd
  * Signature: (Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_Main_cd(JNIEnv *env, jobject obj, jstring jpath){
+JNIEXPORT jstring JNICALL Java_Main_cd(JNIEnv *env, jobject obj, jstring jpath, jlong fs){
     const char *path = (*env)->GetStringUTFChars(env, jpath, 0);
-    char *output = cd(fs, (char*)path);
+    char *output = cd((void *)fs, (char*)path);
     return (*env)->NewStringUTF(env, output);
 }
 
@@ -64,8 +98,8 @@ JNIEXPORT jstring JNICALL Java_Main_cd(JNIEnv *env, jobject obj, jstring jpath){
  * Method:    pwd
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_Main_pwd(JNIEnv *env, jobject obj){
-    char *output = pwd(fs);
+JNIEXPORT jstring JNICALL Java_Main_pwd(JNIEnv *env, jobject obj, jlong fs){
+    char *output = pwd((void *)fs);
     return (*env)->NewStringUTF(env, output);
 }
 
@@ -74,9 +108,9 @@ JNIEXPORT jstring JNICALL Java_Main_pwd(JNIEnv *env, jobject obj){
  * Method:    cp
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_Main_cp(JNIEnv *env, jobject obj, jstring jpath, jstring joutput_path){
+JNIEXPORT jstring JNICALL Java_Main_cp(JNIEnv *env, jobject obj, jstring jpath, jstring joutput_path, jlong fs){
     const char *path = (*env)->GetStringUTFChars(env, jpath, 0);
     const char *output_path = (*env)->GetStringUTFChars(env, joutput_path, 0);
-    char *output = cp(fs, (char*)path, (char*)output_path);
+    char *output = cp((void *)fs, (char*)path, (char*)output_path);
     return (*env)->NewStringUTF(env, output);
 }

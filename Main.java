@@ -17,8 +17,8 @@ public class Main {
 
         if (args.length >= 2 && args[0].equals("shell")){
 
-            int init = main.initFS(args[1]);
-            if (init == -1){
+            long fs = main.initFS(args[1]);
+            if (fs == -1){
                 System.out.println("filesystem is not NTFS");
                 return;
             } else {
@@ -31,7 +31,7 @@ public class Main {
             String[] input;
             String output;
             while (!exit){
-                pwd = main.pwd();
+                pwd = main.pwd(fs);
                 System.out.print(pwd + "> ");
                 input = scanner.nextLine().split(" ");
                 switch (input[0]) {
@@ -48,16 +48,20 @@ public class Main {
                         break;
                     case "ls":
                         String path = input.length >= 2 ? input[1] : ".";
-                        output = main.ls(path);
-                        System.out.print(output);
+                        String[] records = main.ls(path, fs);
+                        for (int i =0; i <records.length; i+=2){
+                            if (!records[i + 1].equals("")){
+                                System.out.println(records[i] + " " + records[i+1]);
+                            }
+                        }
                         break;
                     case "pwd":
-                        output = main.pwd();
+                        output = main.pwd(fs);
                         System.out.print(output);
                         break;
                     case "cd":
                         if (input.length >= 2){
-                            output = main.cd(input[1]);
+                            output = main.cd(input[1], fs);
                             System.out.print(output);
                         } else {
                             System.out.println("cd command require path argument");
@@ -66,7 +70,7 @@ public class Main {
                     case "cp":
                         switch (input.length){
                             case 3:
-                                output = main.cp(input[1], input[2]);
+                                output = main.cp(input[1], input[2], fs);
                                 System.out.print(output);
                                 break;
                             case 2:
@@ -81,7 +85,7 @@ public class Main {
                         System.out.println("wrong command. Enter 'help' to get help");
                 }
             }
-            main.closeFS();
+            main.closeFS(fs);
             return;
         }
 
@@ -89,10 +93,10 @@ public class Main {
     }
 
     private native void print_devices();
-    private native String ls(String path);
-    private native String cd(String path);
-    private native String pwd();
-    private native String cp(String path, String outPath);
-    private native int initFS(String path);
-    private native void closeFS();
+    private native String[] ls(String path, long fs);
+    private native String cd(String path, long fs);
+    private native String pwd(long fs);
+    private native String cp(String path, String outPath, long fs);
+    private native long initFS(String path);
+    private native void closeFS(long fs);
 }

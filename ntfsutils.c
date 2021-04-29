@@ -80,7 +80,7 @@ int find_node_by_name(struct ntfs_sb_info *fs, char *path, struct ntfs_inode *st
     return -1;
 }
 
-char *ls(void *fs_ptr, char *path){
+struct ntfs_ls_info *ls(void *fs_ptr, char *path){
     struct ntfs_sb_info* fs = (struct ntfs_sb_info*)fs_ptr;
     bool wo_path = false;
     bool parent_pars = false;
@@ -109,16 +109,32 @@ char *ls(void *fs_ptr, char *path){
         int err = ntfs_readdir(fs, &(find_result->result));
         if (err == -1) return NULL;
         struct ntfs_inode *tmp = find_result->result->next_inode;
-        char result[265];
-        char *output = malloc(265*err);
-        output[0] = '\0';
+//        char result[265];
+//        char *output = malloc(265*err);
+//        output[0] = '\0';
+
+        struct ntfs_ls_info *start = malloc(sizeof (struct ntfs_ls_info));
+        start->filename = NULL;
+        start->next = NULL;
+        struct ntfs_ls_info *cur = start;
+
         while (tmp != NULL){
+            cur->next = malloc(sizeof (struct ntfs_ls_info));
+            cur = cur->next;
             if (tmp->type & MFT_RECORD_IS_DIRECTORY){
-                sprintf(result, "DIR \t%s\n", tmp->filename);
+                cur->dir = 1;
+                cur->filename = malloc(strlen(tmp->filename));
+                cur->next = NULL;
+                strcpy(cur->filename, tmp->filename);
+//                sprintf(result, "DIR \t%s\n", tmp->filename);
             } else {
-                sprintf(result, "FILE\t%s\n", tmp->filename);
+                cur->dir = 0;
+                cur->filename = malloc(strlen(tmp->filename));
+                cur->next = NULL;
+                strcpy(cur->filename, tmp->filename);
+//                sprintf(result, "FILE\t%s\n", tmp->filename);
             }
-            strcat(output, result);
+//            strcat(output, result);
             tmp = tmp->next_inode;
         }
         if (wo_path){
@@ -132,7 +148,7 @@ char *ls(void *fs_ptr, char *path){
         }
         find_result->result = NULL;
         find_result->start = NULL;
-        return output;
+        return start;
     }
     return NULL;
 }
@@ -332,4 +348,20 @@ void *init_fs(char *filename){
 int close_fs(void *fs_ptr){
     struct ntfs_sb_info* fs = (struct ntfs_sb_info*)fs_ptr;
     return free_fs(fs);
+}
+
+int free_infos(struct ntfs_ls_info *inode){
+
+    struct ntfs_ls_info* tmp;
+
+    while (inode != NULL)
+    {
+        tmp = inode;
+        inode = (inode)->next;
+        if (tmp->filename != NULL){
+            free(tmp->filename);
+        }
+        free(tmp);
+    }
+    return 0;
 }
